@@ -1,49 +1,71 @@
 import cv2
+from cv2 import FONT_HERSHEY_COMPLEX
 import imutils
 import numpy as np
 from imutils import paths
+from sqlalchemy import BLANK_SCHEMA
+from ObjectDetection import ObjectDetection
 
 class DistanceDetection:
+    
 
     def __init__(self):
         pass
 
-    def find_marker(self, image):
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        gray = cv2.GaussianBlur(gray, (5,5), 0)
-        edged = cv2.Canny(gray, 35, 125)
-
-        cnts = cv2.findContours(edged.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-        cnts = imutils.grab_contours(cnts)
-        c = max(cnts, key =cv2.contourArea)
-
-        return cv2.minAreaRect(c)
-
-    def distance_to_camera(self, knownWidth, focalLength, perWidth):
+    def focal_length_finder(self, measured_distance, real_width, width_in_rf):
+        focal_length = (width_in_rf * measured_distance) / real_width
+        return focal_length
+      
+    def distance_to_camera(self, focalLength, knownWidth, perWidth):
         return (knownWidth * focalLength) / perWidth
 
+    def detect_Distance(self):   
+        KNOWN_DISTANCE = 72
+        CHAIR_WIDTH = 24
+        TABLE_WIDTH = 26 
+        newObj = ObjectDetection()
 
-    def show_img(self): 
-        KNOWN_DISTANCE = 24.0
+        ref_chair = cv2.imread('ObjDetectionProject/images/chair6ft.jpg')
+        ref_table = cv2.imread('ObjDetectionProject/images/table6ft.jpg')
 
-        KNOWN_WIDTH = 11.5
 
-        image = cv2.imread('ObjDetectionProject/images/DistanceImage.jpg')
-        marker = self.find_marker(image)
-        focalLength = (marker[1][0] * KNOWN_DISTANCE) / KNOWN_WIDTH
+        chair_data = newObj.detectObj(ref_chair)
+        print(chair_data)
+        chair_width_in_rf = chair_data[0][1]
 
-        for imagePath in sorted(paths.list_images("ObjDetectionProject/images")):
-            
-            image = cv2.imread(imagePath)
-            marker = self.find_marker(image)
-            inches = self.distance_to_camera(KNOWN_WIDTH, focalLength, marker[1][0])
-            
-            box = cv2.cv.BoxPoints(marker) if imutils.is_cv2() else cv2.boxPoints(marker)
-            box = np.int0(box)
-            cv2.drawContours(image, [box], -1, (0, 255, 0), 2)
-            cv2.putText(image, "%.2fft" % (inches / 12),
-                (image.shape[1] - 200, image.shape[0] - 20), cv2.FONT_HERSHEY_SIMPLEX,
-                2.0, (0, 255, 0), 3)
-            im2 = cv2.resize(image,(960,540))
-            cv2.imshow("image", im2)
-            cv2.waitKey(0)
+        table_data = newObj.detectObj(ref_table)
+        print(table_data)
+        table_width_in_rf = table_data[1][1]
+
+        print(f"Chair in pixels: {chair_width_in_rf} table width in pixels: {table_width_in_rf} ")
+
+        focal_chair = self.focal_length_finder(KNOWN_DISTANCE, CHAIR_WIDTH, chair_width_in_rf)
+        focal_table = self.focal_length_finder(KNOWN_DISTANCE, TABLE_WIDTH, table_width_in_rf)
+
+        cap = cv2.VideoCapture(1)
+        while True:
+            ret, frame = cap.read()
+
+            data = newObj.detectObj(frame)
+            print(data)
+            for d in data:
+                if d[0] == 'chair':
+                    distance = self.distance_to_camera(focal_chair, CHAIR_WIDTH, d[1])
+                    x, y = d[2]
+                elif d[0] == 'table':
+                    distance = self.distance_to_camera(focal_table, TABLE_WIDTH, d[1])
+                    x, y = d[2]
+                cv2.putText(frame, f'dist: {round(distance,2)}inch', (x,y), FONT_HERSHEY_COMPLEX, 0.6, BLANK_SCHEMA, 2 )
+
+            cv2.imshow("Image", frame)
+            key = cv2.waitKey(34)
+            if key==27:
+                break
+        cap.release()
+        cv2.destroyAllWindows()
+
+
+
+
+#57 chair 
+#61 dining table 
