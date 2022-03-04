@@ -1,6 +1,4 @@
-from ObjectDetection import ObjectDetection 
 from DistanceDetection import DistanceDetection
-import cv2
 
 class ObjectDetectionTest:
     

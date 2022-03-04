@@ -14,8 +14,6 @@ class ObjectDetection:
    
     def __init__(self):
         pass
-
-
         
 
     def detectObj(self,img):
@@ -83,7 +81,7 @@ class ObjectDetection:
                 data_list.append([self.classes[class_ids[i]], w, (x,y)])
             elif class_ids[i] == 60:
                 data_list.append([self.classes[class_ids[i]], w, (x,y)])
-        #print(data_list)
+        print(data_list)
         return data_list
     
 

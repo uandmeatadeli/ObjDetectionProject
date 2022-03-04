@@ -1,9 +1,4 @@
 import cv2
-from cv2 import FONT_HERSHEY_COMPLEX
-import imutils
-import numpy as np
-from imutils import paths
-from sqlalchemy import BLANK_SCHEMA
 from ObjectDetection import ObjectDetection
 
 class DistanceDetection:
@@ -17,7 +12,8 @@ class DistanceDetection:
         return focal_length
       
     def distance_to_camera(self, focalLength, knownWidth, perWidth):
-        return (knownWidth * focalLength) / perWidth
+        distance =(knownWidth * focalLength) / perWidth
+        return distance
 
     def detect_Distance(self):   
         KNOWN_DISTANCE = 72
@@ -47,15 +43,22 @@ class DistanceDetection:
             ret, frame = cap.read()
 
             data = newObj.detectObj(frame)
-            print(data)
+            #print(data)
             for d in data:
                 if d[0] == 'chair':
                     distance = self.distance_to_camera(focal_chair, CHAIR_WIDTH, d[1])
                     x, y = d[2]
-                elif d[0] == 'table':
+                    cv2.rectangle(frame, (x, y-25), (x+300, y),(0,0,0), -1 )
+                    cv2.putText(frame, f'dist: {round(distance,2)}inches', (x,y), cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 255), 2 )
+                elif d[0] == 'diningtable':
                     distance = self.distance_to_camera(focal_table, TABLE_WIDTH, d[1])
                     x, y = d[2]
-                cv2.putText(frame, f'dist: {round(distance,2)}inch', (x,y), FONT_HERSHEY_COMPLEX, 0.6, BLANK_SCHEMA, 2 )
+                    cv2.rectangle(frame, (x, y-25), (x+300, y),(0,0,0), -1 )
+                    cv2.putText(frame, f'dist: {round(distance,2)}inches', (x,y), cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 255), 2 )
+
+                if distance < 100:
+                    cv2.rectangle(frame, (x, y-50), (x+260, y-25),(0,0,0), -1 )
+                    cv2.putText(frame, 'Object ahead!!!',(x,y-25), cv2.FONT_HERSHEY_PLAIN, 2, (0,0,255), 2 )
 
             cv2.imshow("Image", frame)
             key = cv2.waitKey(34)
