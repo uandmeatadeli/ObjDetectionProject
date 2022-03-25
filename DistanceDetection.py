@@ -39,11 +39,16 @@ class DistanceDetection:
         focal_table = self.focal_length_finder(KNOWN_DISTANCE, TABLE_WIDTH, table_width_in_rf)
 
         cap = cv2.VideoCapture(1)
+        #cap = cv2.VideoCapture('ObjDetectionProject/images/TestVideo.mp4')
+        cap.set(3, 1920)
+        cap.set(4, 1080)
+
         while True:
             ret, frame = cap.read()
-
+            
             data = newObj.detectObj(frame)
             #print(data)
+
             for d in data:
                 if d[0] == 'chair':
                     distance = self.distance_to_camera(focal_chair, CHAIR_WIDTH, d[1])
@@ -59,7 +64,7 @@ class DistanceDetection:
                 if distance < 100:
                     cv2.rectangle(frame, (x, y-50), (x+260, y-25),(0,0,0), -1 )
                     cv2.putText(frame, 'Object ahead!!!',(x,y-25), cv2.FONT_HERSHEY_PLAIN, 2, (0,0,255), 2 )
-
+    
             cv2.imshow("Image", frame)
             key = cv2.waitKey(34)
             if key==27:
