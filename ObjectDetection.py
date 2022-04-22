@@ -3,9 +3,9 @@ import numpy as np
 
 class ObjectDetection:
     # Load Yolo 
-    net =cv2.dnn.readNet("ObjDetectionProject/yolov3.weights", "ObjDetectionProject/yolov3.cfg")
+    net =cv2.dnn.readNet("yolov3.weights", "yolov3.cfg")
     classes = []
-    with open("ObjDetectionProject/coco.names", "r") as f:
+    with open("coco.names", "r") as f:
         classes = f.read().splitlines() 
 
     colors = np.random.uniform(0, 255, size=(len(classes), 3))
@@ -43,7 +43,7 @@ class ObjectDetection:
                 scores = detection[5:]
                 class_id = np.argmax(scores)
                 confidence = scores[class_id]
-                if confidence > 0.5:
+                if confidence > 0.6:
                     # Object detected
                     center_x = int(detection[0] * width)
                     center_y = int(detection[1] * height)
@@ -77,10 +77,14 @@ class ObjectDetection:
                 #print(label)
                 cv2.rectangle(img,(x,y), (x+w, y+h), color,2)
                 cv2.putText(img, label + " " + str(round(confidences[i],2)), (x, y + 30), font, 3, color, 3)
+                
             if class_ids[i] == 56:
                 data_list.append([self.classes[class_ids[i]], w, (x,y)])
             elif class_ids[i] == 60:
                 data_list.append([self.classes[class_ids[i]], w, (x,y)])
+            elif class_ids[i] == 0:
+                data_list.append([self.classes[class_ids[i]], w, (x,y)])
+                
         print(data_list)
         return data_list
     
